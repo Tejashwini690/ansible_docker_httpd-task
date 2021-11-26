@@ -1,0 +1,75 @@
+- hosts: localhost
+  vars_prompt:
+          - name: "container_name"
+            prompt: "Docker container name"
+            private: no
+
+
+  tasks:
+    - name: Creating yum_docker repo
+      yum_repository:
+            name: docker
+            file: docker
+            description: docker_repo
+            baseurl: https://download.docker.com/linux/centos/7/x86_64/stable/
+            gpgcheck: no
+
+            #    - name: Install Docker-CE
+            # command: "yum install -y docker-ce --nobest"
+
+    - name: Docker_service
+      service:
+         name: "docker"
+         state: started
+         enabled: yes
+ 
+    - name: Installing docker library
+      command: "pip3 install docker-py"
+
+    - name: pull an image
+      docker_image:
+        name: "httpd:latest"
+        source: pull
+
+    - name: "launch container"
+      docker_container:
+        name: "{{ container_name }}"
+        image: "httpd:latest"
+        state: started
+        #exposed_ports: "80"
+        # ports: "8080:80"
+        interactive: yes
+        detach: yes
+        tty: yes
+
+    - name: "container_info"
+      docker_container_info:
+        name: "{{ container_name }}"
+      register: docker_info
+
+    - debug:
+         var: docker_info.container.NetworkSettings.IPAddress
+
+    - name: "Retrieve_IP_Update_Inventory"
+      template:
+        src: "/root/docker_ip.txt"
+        dest: "/root/docker_ip.txt"
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
